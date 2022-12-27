@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".KaraokeActivity">
+
+    <ImageView
+        android:id="@+id/backgroud_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@mipmap/ktv_class_bg"
+        android:adjustViewBounds="true"/>
+
+    <com.zegocloud.lrcview.LrcView
+        android:id="@+id/lrc_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:lrcAnimationDuration="1000"
+        app:lrcCurrentTextColor="#3F51B5"
+        app:lrcDividerHeight="20dp"
+        app:lrcNormalTextColor="#BDBDBD"
+        app:lrcNormalTextSize="15sp"
+        app:lrcPadding="16dp"
+        app:lrcTextGravity="center"
+        app:lrcTextSize="15sp"
+        app:lrcTimeTextColor="#BDBDBD"
+        app:lrcTimelineColor="#80BDBDBD"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="200dp"
+        android:layout_marginTop="100dp"
+        app:lrcTimelineTextColor="#9FA8DA" />
+
+    <Button
+        android:id="@+id/btn_accompaniment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="Accompaniment" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:orientation="vertical"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:layout_marginBottom="32dp">
+
+        <Button
+            android:id="@+id/btn_start_stop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:text="Start Singing" />
+
+        <Button
+            android:id="@+id/btn_pause_resume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:text="Pause Singing" />
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
