@@ -15,7 +15,7 @@ This project will show how to implement a karaoke solution, you can find various
 │       ├── README.md           ---- Demo instructions
 ```
 ## Solo singing 
-The following is the Demo demonstration video. If you want to know more about the implementation of the solo singing project, you can read the article[How To Build A Solo Singing Function & Why You Need It](https://www.zegocloud.com/blog/solo-singing).
+The following is the Demo demonstration video. If you want to know more about the implementation of the solo singing project, you can read the article [How To Build A Solo Singing Function & Why You Need It](https://www.zegocloud.com/blog/solo-singing).
 
 [![Solo singing](https://res.cloudinary.com/marcomontalbano/image/upload/v1672400640/video_to_markdown/images/youtube--3JTpQncgbNQ-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/3JTpQncgbNQ "Solo singing")
 
