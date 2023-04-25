@@ -3,6 +3,8 @@
 ## Overview
 This project will show how to implement a karaoke solution, you can find various karaoke solutions you are interested in here.
 
+[![ZEGOCLOUD Online Karaoke Solutions: Solo](https://res.cloudinary.com/marcomontalbano/image/upload/v1682409820/video_to_markdown/images/youtube--K5fj1Hn_P2g-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/K5fj1Hn_P2g "ZEGOCLOUD Online Karaoke Solutions: Solo")
+
 ## Project file directory
 ```
 .
