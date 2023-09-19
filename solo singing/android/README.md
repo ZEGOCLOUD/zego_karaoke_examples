@@ -338,3 +338,129 @@ private void stopSinging() {
     lrcView.updateTime(0);
 }
 ```
+### 6. Recording audio files
+#### 6.1 Copying AAC-encoded file
+Copy the `AacEncoder.java` file to your project.
+
+#### 6.2 Adding properties
+Add the following properties to `KaraokeActivity.java` file.
+
+```java
+// audio record
+private int sampleRate = 48000;
+private int channelCount = 2;
+private int bitRate = 128000;
+private AacEncoder aacEncoder;
+```
+#### 6.3 Creating an `AacEncoder` Instance
+
+In the `onCreate` method, create an instance of `AacEncoder`.
+
+```java
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_karaoke);
+    ...
+    aacEncoder = new AacEncoder();
+    ...
+}
+```
+
+#### 6.5 Listening for Audio Data Callbacks
+Listen for audio data callbacks by calling the [setAudioDataHandler](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#set-audio-data-handler) interface.
+
+```java
+void setEventHandler() {
+    
+    mSDKEngine.setAudioDataHandler(new IZegoAudioDataHandler() {
+        @Override
+        public void onCapturedAudioData(ByteBuffer data, int dataLength, ZegoAudioFrameParam param) {
+            System.out.println("onCapturedAudioData: " + dataLength);
+
+            int audioSize = data.remaining();
+            byte[] audioData = new byte[audioSize];
+            data.get(audioData);
+            aacEncoder.dstAudioFormatFromPCM(audioData);
+        }
+    });
+}
+```
+
+#### 6.4 Starting and Ending Recording
+- Start Recording: Start recording audio by calling `aacEncoder.startRecord` interface, call `startAudioDataObserver` interface to start audio data callback.
+
+- End Recording: Stop the audio and video data callback by calling the [stopAudioDataObserver](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#stop-audio-data-observer) interface, call the `aacEncoder.stopRecord` interface to stop the recording.
+
+```java
+private void startSinging() {
+    ...
+
+    // start record
+    String filePath = getApplicationContext().getExternalFilesDir(null) + "/audio/";
+    fileIsExist(filePath);
+    aacEncoder.startRecord(filePath + getFileName(), 1920, sampleRate, bitRate, channelCount);
+
+    // Enable the function of acquiring raw audio data
+    startAudioDataObserver();
+    ...
+}
+
+// stop singing
+private void stopSinging() {
+    ...
+    mSDKEngine.stopAudioDataObserver();
+    ...
+    aacEncoder.stopRecord();
+}
+```
+#### 6.5 Pause and Resume Recording
+To pause and resume recording, simply pause or start the audio data callback.
+
+- Pause recording: call the [stopAudioDataObserver](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#stop-audio-data-observer) interface to stop the audio data callback.
+- Resume recording: call the `startAudioDataObserver` interface to start the audio data callback.
+
+```java
+
+// Pause singing
+private void pauseSinging() {
+    ...
+    mSDKEngine.stopAudioDataObserver();
+    ...
+}
+
+// Resume Singing
+private void resumeSinging() {
+    ...
+    startAudioDataObserver();
+    ...
+}
+```
+
+#### 6.5 Other Logic
+Encapsulates the start audio data callback method by calling the [startAudioDataObserver](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#start-audio-data-observer) interface.
+```java
+private  void startAudioDataObserver() {
+    ZegoAudioFrameParam param=new ZegoAudioFrameParam();
+    param.channel = ZegoAudioChannel.STEREO;
+    param.sampleRate = ZegoAudioSampleRate.ZEGO_AUDIO_SAMPLE_RATE_48K;
+    int bitmask = 0;
+    bitmask |= ZegoAudioDataCallbackBitMask.CAPTURED.value();
+    mSDKEngine.startAudioDataObserver(bitmask, param);
+}
+```
+
+
+Wraps the `fileIsExist` method for creating AAC files.
+
+```java
+boolean fileIsExist(String fileName)
+{
+    // Check whether the path exist.
+    File file=new File(fileName);
+    if (file.exists())
+        return true;
+    else{
+        return file.mkdirs();
+    }
+}
+```

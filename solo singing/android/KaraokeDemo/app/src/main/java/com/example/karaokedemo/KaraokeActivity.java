@@ -1,11 +1,20 @@
 package com.example.karaokedemo;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.AudioFormat;
+import android.media.MediaCodec;
+import android.media.MediaCodecInfo;
+import android.media.MediaFormat;
+import android.media.MediaMuxer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -20,17 +29,28 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Random;
 
 import im.zego.zegoexpress.ZegoExpressEngine;
 import im.zego.zegoexpress.ZegoMediaPlayer;
+import im.zego.zegoexpress.callback.IZegoAudioDataHandler;
 import im.zego.zegoexpress.callback.IZegoEventHandler;
 import im.zego.zegoexpress.callback.IZegoMediaPlayerEventHandler;
 import im.zego.zegoexpress.callback.IZegoMediaPlayerLoadResourceCallback;
+import im.zego.zegoexpress.constants.ZegoAudioChannel;
+import im.zego.zegoexpress.constants.ZegoAudioDataCallbackBitMask;
+import im.zego.zegoexpress.constants.ZegoAudioSampleRate;
 import im.zego.zegoexpress.constants.ZegoMediaPlayerState;
+import im.zego.zegoexpress.constants.ZegoPublisherState;
 import im.zego.zegoexpress.constants.ZegoReverbPreset;
 import im.zego.zegoexpress.constants.ZegoUpdateType;
+import im.zego.zegoexpress.entity.ZegoAudioFrameParam;
+import im.zego.zegoexpress.entity.ZegoPlayStreamQuality;
+import im.zego.zegoexpress.entity.ZegoPublishStreamQuality;
 import im.zego.zegoexpress.entity.ZegoRoomConfig;
 import im.zego.zegoexpress.entity.ZegoStream;
 import im.zego.zegoexpress.entity.ZegoUser;
@@ -58,6 +78,12 @@ public class KaraokeActivity extends AppCompatActivity {
     private SingingStatus singingStatus = SingingStatus.StopSinging;
     private  String mp3FilePath;
 
+    // audio record
+    private int sampleRate = 48000;
+    private int channelCount = 2;
+    private int bitRate = 128000;
+    private AacEncoder aacEncoder;
+
     /***
      * Life cycle
      */
@@ -68,6 +94,8 @@ public class KaraokeActivity extends AppCompatActivity {
 
         checkDevicePermission();
         configView();
+
+        aacEncoder = new AacEncoder();
 
         setEventHandler();
         loginRoom();
@@ -117,7 +145,6 @@ public class KaraokeActivity extends AppCompatActivity {
         });
 
         btnAccompaniment.setOnClickListener(v->{
-            //
             if (player.getAudioTrackCount() < 2) {
                 return;
             }
@@ -132,6 +159,14 @@ public class KaraokeActivity extends AppCompatActivity {
             v.setSelected(!v.isSelected());
         });
     }
+
+    public String getFileName(){
+        // Use time as filename
+        Date date = new Date(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        return sdf.format(date) + ".aac";
+    }
+
     // Start singing
     private void startSinging() {
         // Update singing status
@@ -152,12 +187,23 @@ public class KaraokeActivity extends AppCompatActivity {
         mSDKEngine.muteMicrophone(false);
         // start publishing stream
         mSDKEngine.startPublishingStream(streamID);
+
+        // start record
+        String filePath = getApplicationContext().getExternalFilesDir(null) + "/audio/";
+        fileIsExist(filePath);
+        aacEncoder.startRecord(filePath + getFileName(), 1920, sampleRate, bitRate, channelCount);
+
+        // Enable the function of acquiring raw audio data
+        startAudioDataObserver();
     }
+
     // stop singing
     private void stopSinging() {
         // update singing status
         singingStatus = SingingStatus.StopSinging;
         btnStartStop.setText("Start Singing");
+
+        mSDKEngine.stopAudioDataObserver();
 
         // stop publish stream
         mSDKEngine.stopPublishingStream();
@@ -167,12 +213,15 @@ public class KaraokeActivity extends AppCompatActivity {
         player.stop();
         // reset lyrics progress
         lrcView.updateTime(0);
+        aacEncoder.stopRecord();
     }
+
     // Pause singing
     private void pauseSinging() {
         // update singing status
         singingStatus = SingingStatus.PauseSinging;
         btnPauseResume.setText("Resume Singing");
+        mSDKEngine.stopAudioDataObserver();
 
         // mute microphone
         mSDKEngine.muteMicrophone(true);
@@ -180,16 +229,26 @@ public class KaraokeActivity extends AppCompatActivity {
         // pause media player
         player.pause();
     }
+
     // Resume Singing
     private void resumeSinging() {
         // update singing status
         singingStatus = SingingStatus.Singing;
         btnPauseResume.setText("Pause Singing");
-
+        startAudioDataObserver();
         // open microphone
         mSDKEngine.muteMicrophone(false);
         // resume media player
         player.resume();
+    }
+
+    private  void startAudioDataObserver() {
+        ZegoAudioFrameParam param=new ZegoAudioFrameParam();
+        param.channel = ZegoAudioChannel.STEREO;
+        param.sampleRate = ZegoAudioSampleRate.ZEGO_AUDIO_SAMPLE_RATE_48K;
+        int bitmask = 0;
+        bitmask |= ZegoAudioDataCallbackBitMask.CAPTURED.value();
+        mSDKEngine.startAudioDataObserver(bitmask, param);
     }
 
     /***
@@ -222,6 +281,7 @@ public class KaraokeActivity extends AppCompatActivity {
             }
 
             // Update the singing status, used for demo demonstration, can be deleted when the business is realized
+            @Override
             public void onPlayerRecvSEI(String streamID, byte[] data) {
                 String dataString = new String(data);
                 try {
@@ -235,7 +295,22 @@ public class KaraokeActivity extends AppCompatActivity {
                 }
             }
         });
+
+        mSDKEngine.setAudioDataHandler(new IZegoAudioDataHandler() {
+            @Override
+            public void onCapturedAudioData(ByteBuffer data, int dataLength, ZegoAudioFrameParam param) {
+                System.out.println("onCapturedAudioData: " + dataLength);
+
+                int audioSize = data.remaining();
+                byte[] audioData = new byte[audioSize];
+                data.get(audioData);
+                aacEncoder.dstAudioFormatFromPCM(audioData);
+            }
+        });
     }
+
+
+
     // Login karaoke room
     private void loginRoom() {
         // Generate a room id
@@ -343,7 +418,8 @@ public class KaraokeActivity extends AppCompatActivity {
     private void checkDevicePermission(){
         String[] permissionNeeded = {
                 "android.permission.CAMERA",
-                "android.permission.RECORD_AUDIO"};
+                "android.permission.RECORD_AUDIO",
+                "android.permission.WRITE_EXTERNAL_STORAGE"};
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, "android.permission.CAMERA") != PackageManager.PERMISSION_GRANTED ||
@@ -393,5 +469,16 @@ public class KaraokeActivity extends AppCompatActivity {
         myOutput.flush();
         myInput.close();
         myOutput.close();
+    }
+
+    boolean fileIsExist(String fileName)
+    {
+        // Check whether the path exist.
+        File file=new File(fileName);
+        if (file.exists())
+            return true;
+        else{
+            return file.mkdirs();
+        }
     }
 }
