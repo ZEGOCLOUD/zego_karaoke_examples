@@ -366,7 +366,7 @@ protected void onCreate(Bundle savedInstanceState) {
 }
 ```
 
-#### 6.5 Listening for Audio Data Callbacks
+#### 6.4 Listening for Audio Data Callbacks
 Listen for audio data callbacks by calling the [setAudioDataHandler](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#set-audio-data-handler) interface.
 
 ```java
@@ -386,7 +386,7 @@ void setEventHandler() {
 }
 ```
 
-#### 6.4 Starting and Ending Recording
+#### 6.5 Starting and Ending Recording
 - Start Recording: Start recording audio by calling `aacEncoder.startRecord` interface, call `startAudioDataObserver` interface to start audio data callback.
 
 - End Recording: Stop the audio and video data callback by calling the [stopAudioDataObserver](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#stop-audio-data-observer) interface, call the `aacEncoder.stopRecord` interface to stop the recording.
@@ -413,7 +413,7 @@ private void stopSinging() {
     aacEncoder.stopRecord();
 }
 ```
-#### 6.5 Pause and Resume Recording
+#### 6.6 Pause and Resume Recording
 To pause and resume recording, simply pause or start the audio data callback.
 
 - Pause recording: call the [stopAudioDataObserver](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#stop-audio-data-observer) interface to stop the audio data callback.
@@ -436,7 +436,7 @@ private void resumeSinging() {
 }
 ```
 
-#### 6.5 Other Logic
+#### 6.7 Other Logic
 Encapsulates the start audio data callback method by calling the [startAudioDataObserver](https://docs.zegocloud.com/article/api?doc=express_video_sdk_API~java_android~class~ZegoExpressEngine#start-audio-data-observer) interface.
 ```java
 private  void startAudioDataObserver() {
